@@ -1,0 +1,22 @@
+name: smart_tourniquet_app
+description: Застосунок медика для автоматизованого тріажу за даними SmartTourniquet.
+publish_to: "none"
+version: 0.1.0+1
+
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_blue_plus: ^1.32.0     # BLE-сканування маяків
+  nfc_manager: ^3.5.0            # резервний канал NFC
+  permission_handler: ^11.3.0    # дозволи BLUETOOTH_SCAN / NFC
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true

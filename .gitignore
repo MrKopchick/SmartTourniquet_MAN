@@ -1,0 +1,28 @@
+# Arduino / build
+build/
+*.hex
+*.uf2
+*.elf
+*.bin
+
+# Flutter / Dart
+app/**/.dart_tool/
+app/**/build/
+app/**/.flutter-plugins
+app/**/.flutter-plugins-dependencies
+app/**/pubspec.lock
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# IDE / OS
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
+
+# KiCad backups
+*-backups/
+*.kicad_prl
