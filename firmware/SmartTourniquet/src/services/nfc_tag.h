@@ -1,18 +1,14 @@
-/**
- * @file nfc_tag.h
- * @brief Secondary backup telemetry channel using nRF52 internal NFCT peripheral (13.56 MHz).
- *
- * Emulates an NFC Forum Type 2 Tag with NDEF payload.
- * Allows zero-RF emissions reading by medic smartphone touch.
- */
 #pragma once
 #include <Arduino.h>
 #include "../core/beacon_packet.h"
 
+// ISO/IEC 14443-A / NFC Forum Type 2 Tag emulation via internal nRF52840 NFCT (13.56 MHz).
 class NfcTag {
  public:
   bool begin();
-  void update(const BeaconPacket::Payload& p);  // Update serialized NDEF record
+  void update(const BeaconPacket::Payload& p);
+  void stop();
+  bool isReady() const { return _ready; }
 
  private:
   bool _ready = false;

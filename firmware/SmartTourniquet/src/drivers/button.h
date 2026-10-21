@@ -1,18 +1,14 @@
-/**
- * @file button.h
- * @brief Push-button driver handling short and long press events.
- *   SHORT_PRESS: Displays on-demand tactical HUD on OLED (3-5 seconds).
- *   LONG_PRESS: Maintenance and operational state reset after release.
- */
 #pragma once
 #include <Arduino.h>
 
 class Button {
  public:
   enum class Event : uint8_t { NONE, SHORT_PRESS, LONG_PRESS };
+  using WakeCallback = void (*)();
 
-  void  begin(uint8_t pin, uint32_t debounceMs, uint32_t longPressMs);
+  void  begin(uint8_t pin, uint32_t debounceMs, uint32_t longPressMs, WakeCallback onWake = nullptr);
   Event update();
+  bool  isPressed() const { return _pressed; }
 
  private:
   uint8_t  _pin = 0;

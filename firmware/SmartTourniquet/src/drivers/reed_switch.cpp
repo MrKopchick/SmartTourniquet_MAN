@@ -1,15 +1,12 @@
 #include "reed_switch.h"
+#include "../../config.h"
 
 void ReedSwitch::begin(uint8_t pin, uint32_t closeConfirmMs, uint32_t openConfirmMs) {
   _pin = pin;
   _closeMs = closeConfirmMs;
   _openMs = openConfirmMs;
 
-  // Note: Internal ~13k pull-up draws ~230 uA when contact is closed.
-  // Hardware optimization options:
-  // (a) External 1-2 MOhm pull-up resistor.
-  // (b) Sampled pull-up duty cycling during sleep intervals.
-  pinMode(_pin, INPUT_PULLUP);
+  pinMode(_pin, INPUT);
 
   _lastRaw = isClosedRaw();
   _stableClosed = _lastRaw;
@@ -17,7 +14,16 @@ void ReedSwitch::begin(uint8_t pin, uint32_t closeConfirmMs, uint32_t openConfir
 }
 
 bool ReedSwitch::isClosedRaw() const {
-  return digitalRead(_pin) == LOW;  // Normally open contact connects to GND
+#if REED_EXTERNAL_PULLUP
+  return digitalRead(_pin) == LOW;
+#else
+  // Pulse internal ~13 kOhm pull-up for 5 us to avoid ~230 uA continuous drain when closed.
+  pinMode(_pin, INPUT_PULLUP);
+  delayMicroseconds(5);
+  const bool closed = (digitalRead(_pin) == LOW);
+  pinMode(_pin, INPUT);
+  return closed;
+#endif
 }
 
 ReedSwitch::Event ReedSwitch::update() {
@@ -42,7 +48,7 @@ ReedSwitch::Event ReedSwitch::update() {
 bool ReedSwitch::waitStableClosed(uint32_t confirmMs) {
   const uint32_t start = millis();
   while (millis() - start < confirmMs) {
-    if (!isClosedRaw()) return false;  // False positive reject (impact or stray magnetic field)
+    if (!isClosedRaw()) return false;
     delay(50);
   }
   _stableClosed = true;

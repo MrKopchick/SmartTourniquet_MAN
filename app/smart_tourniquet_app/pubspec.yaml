@@ -9,9 +9,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  flutter_blue_plus: ^1.32.0     # BLE-сканування маяків
-  nfc_manager: ^3.5.0            # резервний канал NFC
-  permission_handler: ^11.3.0    # дозволи BLUETOOTH_SCAN / NFC
+  flutter_blue_plus: ^1.32.0
+  nfc_manager: ^3.5.0
+  permission_handler: ^11.3.0
 
 dev_dependencies:
   flutter_test:

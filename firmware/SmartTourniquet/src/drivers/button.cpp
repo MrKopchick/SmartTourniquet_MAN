@@ -1,18 +1,30 @@
 #include "button.h"
 
-void Button::begin(uint8_t pin, uint32_t debounceMs, uint32_t longPressMs) {
+namespace {
+Button::WakeCallback s_wakeCallback = nullptr;
+
+void buttonIsr() {
+  if (s_wakeCallback) {
+    s_wakeCallback();
+  }
+}
+}  // namespace
+
+void Button::begin(uint8_t pin, uint32_t debounceMs, uint32_t longPressMs, WakeCallback onWake) {
   _pin = pin;
   _debounceMs = debounceMs;
   _longMs = longPressMs;
-  pinMode(_pin, INPUT_PULLUP);  // Pull-up draws zero current while open
-  _lastRaw = digitalRead(_pin) == LOW;
+  s_wakeCallback = onWake;
+
+  pinMode(_pin, INPUT_PULLUP);
+  _lastRaw = (digitalRead(_pin) == LOW);
   _changedAt = millis();
 
-  // TODO: Implement external pin interrupt wake-up for instantaneous edge handling.
+  attachInterrupt(digitalPinToInterrupt(_pin), buttonIsr, CHANGE);
 }
 
 Button::Event Button::update() {
-  const bool raw = digitalRead(_pin) == LOW;
+  const bool raw = (digitalRead(_pin) == LOW);
   const uint32_t now = millis();
 
   if (raw != _lastRaw) {
@@ -25,7 +37,7 @@ Button::Event Button::update() {
     _pressed = true;
     _longFired = false;
     _pressedAt = now;
-  } else if (raw && _pressed && !_longFired && now - _pressedAt >= _longMs) {
+  } else if (raw && _pressed && !_longFired && (now - _pressedAt >= _longMs)) {
     _longFired = true;
     return Event::LONG_PRESS;
   } else if (!raw && _pressed) {

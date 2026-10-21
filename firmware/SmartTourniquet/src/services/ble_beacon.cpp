@@ -2,34 +2,54 @@
 #include <bluefruit.h>
 #include "../../config.h"
 
-// BLE advertising interval expressed in 0.625 ms units.
-static constexpr uint16_t kAdvUnits = (uint32_t)BLE_ADV_INTERVAL_MS * 8 / 5;
+uint16_t BleBeacon::intervalUnitsFor(TriageLevel level) {
+  uint32_t ms = BLE_ADV_SAFE_MS;
+  switch (level) {
+    case TriageLevel::CRITICAL:
+      ms = BLE_ADV_CRITICAL_MS;
+      break;
+    case TriageLevel::ATTENTION:
+      ms = BLE_ADV_ATTENTION_MS;
+      break;
+    case TriageLevel::SAFE:
+    default:
+      ms = BLE_ADV_SAFE_MS;
+      break;
+  }
+  // BLE advertising interval is specified in 0.625 ms units (ms * 8 / 5).
+  return static_cast<uint16_t>((ms * 8UL) / 5UL);
+}
 
 bool BleBeacon::begin() {
-  Bluefruit.begin();
-  Bluefruit.autoConnLed(false);          // Disable diagnostic LEDs for light discipline
+  // 0 peripheral and 0 central connections: pure beacon role saves SoftDevice RAM.
+  Bluefruit.begin(0, 0);
+  Bluefruit.autoConnLed(false);
   Bluefruit.setTxPower(BLE_TX_POWER_DBM);
   Bluefruit.setName(BLE_DEVICE_NAME);
   Bluefruit.Advertising.restartOnDisconnect(false);
   return true;
 }
 
-void BleBeacon::update(const BeaconPacket::Payload& p) {
+void BleBeacon::update(const BeaconPacket::Payload& p, TriageLevel level) {
   uint8_t buf[BeaconPacket::LENGTH];
   BeaconPacket::encode(p, buf);
 
-  // Payload: Flags (3) + Manufacturer Data (2 + 12) + Name (2 + 3) = 22 of 31 max bytes.
-  Bluefruit.Advertising.stop();
+  const uint16_t advUnits = intervalUnitsFor(level);
+
+  // Legacy ADV_NONCONN_IND budget: Flags (3B) + Manufacturer Data (14B) + Name (5B) = 22 / 31 bytes.
+  if (_started) {
+    Bluefruit.Advertising.stop();
+  }
   Bluefruit.Advertising.clearData();
   Bluefruit.Advertising.addFlags(BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE);
   Bluefruit.Advertising.addData(BLE_GAP_AD_TYPE_MANUFACTURER_SPECIFIC_DATA, buf, sizeof(buf));
   Bluefruit.Advertising.addName();
   Bluefruit.Advertising.setType(BLE_GAP_ADV_TYPE_NONCONNECTABLE_NONSCANNABLE_UNDIRECTED);
-  Bluefruit.Advertising.setInterval(kAdvUnits, kAdvUnits);
-  Bluefruit.Advertising.start(0);  // 0 = advertise indefinitely
-  _started = true;
+  Bluefruit.Advertising.setInterval(advUnits, advUnits);
+  Bluefruit.Advertising.start(0);
 
-  // TODO: Implement adaptive intervals based on triage level (e.g., 2000 ms SAFE, 500 ms CRITICAL).
+  _started = true;
+  _currentIntervalUnits = advUnits;
 }
 
 void BleBeacon::stop() {

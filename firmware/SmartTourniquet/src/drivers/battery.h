@@ -1,15 +1,10 @@
-/**
- * @file battery.h
- * @brief Battery voltage measurement and state-of-charge estimator.
- * Measures VDD directly using nRF52 internal SAADC.
- */
 #pragma once
 #include <Arduino.h>
 
 class Battery {
  public:
   void     begin();
-  void     measure();                       // Refresh sampled reading
+  void     measure();
   uint16_t millivolts() const { return _mv; }
   uint8_t  percent() const { return _pct; }
   bool     isLow(uint8_t thresholdPct) const { return _pct <= thresholdPct; }
@@ -20,4 +15,5 @@ class Battery {
 
   uint16_t _mv = 3000;
   uint8_t  _pct = 100;
+  bool     _initialized = false;
 };
