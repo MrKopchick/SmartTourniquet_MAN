@@ -1,4 +1,5 @@
 #include "button.h"
+#include "../../config.h"
 
 namespace {
 Button::WakeCallback s_wakeCallback = nullptr;
@@ -11,7 +12,7 @@ void buttonIsr() {
 }  // namespace
 
 void Button::begin(uint8_t pin, uint32_t debounceMs, uint32_t longPressMs, WakeCallback onWake) {
-  _pin = pin;
+  _pin = resolveArduinoPin(pin);
   _debounceMs = debounceMs;
   _longMs = longPressMs;
   s_wakeCallback = onWake;

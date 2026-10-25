@@ -2,7 +2,7 @@
 #include "../../config.h"
 
 void ReedSwitch::begin(uint8_t pin, uint32_t closeConfirmMs, uint32_t openConfirmMs) {
-  _pin = pin;
+  _pin = resolveArduinoPin(pin);
   _closeMs = closeConfirmMs;
   _openMs = openConfirmMs;
 

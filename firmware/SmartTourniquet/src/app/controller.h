@@ -24,11 +24,17 @@ class Controller {
   void loop();
 
  private:
-  enum class Mode : uint8_t { ARMED, RELEASED };
+  enum class Mode : uint8_t { STANDBY, ARMED, RELEASED };
 
   void arm(uint32_t initialSec, bool restored);
   void release();
-  [[noreturn]] void goToStandby();
+  void goToStandby();
+
+#if DEV_MODE
+  void handleSerialCommands();
+  void execSerialCommand(char* cmd);
+  void printSerialStatus(const char* tag) const;
+#endif
 
   BeaconPacket::Payload buildPayload() const;
   uint8_t     buildFlags() const;
@@ -49,7 +55,7 @@ class Controller {
   NfcTag         _nfc;
   Persistence    _persist;
 
-  Mode        _mode         = Mode::ARMED;
+  Mode        _mode         = Mode::STANDBY;
   uint16_t    _deviceId     = 0;
   bool        _timeRestored = false;
   TriageLevel _lastLevel    = TriageLevel::SAFE;
@@ -62,4 +68,10 @@ class Controller {
   uint32_t _displayOffAt         = 0;
   uint32_t _resetConfirmUntilMs  = 0;
   bool     _resetConfirmPending  = false;
+
+#if DEV_MODE
+  char     _cmdBuf[16]    = {0};
+  uint8_t  _cmdLen        = 0;
+  uint32_t _lastCmdCharMs = 0;
+#endif
 };

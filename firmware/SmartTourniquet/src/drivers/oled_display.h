@@ -9,6 +9,7 @@ struct StatusView {
   uint32_t    elapsedSec;
   uint8_t     batteryPct;
   TriageLevel level;
+  bool        standby;
   bool        released;
   bool        timeRestored;
   bool        lowBattery;
@@ -17,14 +18,13 @@ struct StatusView {
 
 class OledDisplay {
  public:
-  void begin();
+  bool begin();
   void show(const StatusView& v);
   void off();
   bool isOn() const { return _on; }
 
  private:
-  bool powerUp();
-  void powerDown();
+  bool ensureInit();
   void drawBatteryIcon(int16_t x, int16_t y, uint8_t pct);
 
   Adafruit_SSD1306 _oled{OLED_WIDTH, OLED_HEIGHT, &Wire, -1};

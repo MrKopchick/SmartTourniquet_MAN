@@ -60,17 +60,18 @@ void notifyWakeFromISR() {
 }
 
 void enterSystemOff(uint8_t wakePin) {
-  DBG("[PWR] Entering System OFF, wake pin: %u\n", wakePin);
+  const uint8_t resolvedPin = resolveArduinoPin(wakePin);
+  DBG("[PWR] Entering System OFF, wake GPIO %u (Arduino pin %u)\n", wakePin, resolvedPin);
 
   // Wait for reed switch to open before arming SENSE_LOW wake to prevent immediate wake loop.
-  pinMode(wakePin, INPUT_PULLUP);
+  pinMode(resolvedPin, INPUT_PULLUP);
   delayMicroseconds(10);
-  while (digitalRead(wakePin) == LOW) {
+  while (digitalRead(resolvedPin) == LOW) {
     feedWatchdog();
     delay(50);
   }
 
-  systemOff(wakePin, LOW);
+  systemOff(resolvedPin, LOW);
   while (true) {}
 }
 
